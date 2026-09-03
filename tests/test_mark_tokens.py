@@ -861,6 +861,10 @@ match cmd:
     pass
   case {'k': v, **extra}:
     pass
+  case {'j': w}:
+    pass
+  case {**only}:
+    pass
   case str() as s:
     pass
 """)
@@ -868,6 +872,8 @@ match cmd:
       self.assertIn(('MatchStar', '*rest'), seen)
       self.assertIn(('MatchSequence', '[1, *rest]'), seen)
       self.assertIn(('MatchMapping', "{'k': v, **extra}"), seen)
+      self.assertIn(('MatchMapping', "{'j': w}"), seen)
+      self.assertIn(('MatchMapping', '{**only}'), seen)
       self.assertIn(('MatchAs', 'str() as s'), seen)
 
   if sys.version_info >= (3, 12):

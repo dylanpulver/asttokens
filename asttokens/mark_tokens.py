@@ -262,12 +262,15 @@ class MarkTokens:
   # the name. astroid stores the same names as AssignName children, hence the isinstance checks.
 
   def _extend_to_name(self, name: object, last_token: util.Token) -> util.Token:
-    """Extend last_token onto an immediately following NAME token equal to `name`."""
-    if not isinstance(name, str):
-      return last_token
-    following = self._code.next_token(last_token)
-    if util.match_token(following, token.NAME, name):
-      return following
+    """Extend last_token onto an immediately following NAME token equal to `name`.
+
+    `name` is only a string for `ast`; astroid stores the same captures as AssignName
+    children, and those already carry a position, so there is nothing to extend onto.
+    """
+    if isinstance(name, str):
+      following = self._code.next_token(last_token)
+      if util.match_token(following, token.NAME, name):
+        return following
     return last_token
 
   def visit_matchstar(
