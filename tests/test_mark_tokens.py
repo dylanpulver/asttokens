@@ -14,6 +14,7 @@ from time import time
 
 import astroid
 from asttokens import util, ASTTokens
+from asttokens.mark_tokens import MarkTokens
 
 from . import tools
 
@@ -867,14 +868,27 @@ match cmd:
     pass
   case str() as s:
     pass
+  case [*_]:
+    pass
 """)
       seen = {(tools.get_node_name(n), m.atok.get_text(n)) for n in m.all_nodes}
+      # A discarded capture has name None; '_' is still written and still extended onto.
+      self.assertIn(('MatchStar', '*_'), seen)
       self.assertIn(('MatchStar', '*rest'), seen)
       self.assertIn(('MatchSequence', '[1, *rest]'), seen)
       self.assertIn(('MatchMapping', "{'k': v, **extra}"), seen)
       self.assertIn(('MatchMapping', "{'j': w}"), seen)
       self.assertIn(('MatchMapping', '{**only}'), seen)
       self.assertIn(('MatchAs', 'str() as s'), seen)
+
+  def test_extend_to_name_leaves_non_string_alone(self):
+    # astroid stores a capture as an AssignName rather than a plain identifier, and those
+    # already carry a position, so there is nothing to extend onto and the token comes back
+    # unchanged. The shared harness cannot assert astroid's positions for these patterns,
+    # so the contract is checked on its own.
+    atok = ASTTokens("x = 1\n", parse=True)
+    last = atok.tokens[0]
+    self.assertIs(MarkTokens(atok)._extend_to_name(None, last), last)
 
   if sys.version_info >= (3, 12):
     def test_pep695_type_params(self):
